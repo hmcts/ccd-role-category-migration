@@ -1,0 +1,15 @@
+spring:
+  jpa:
+    database: postgresql
+    driver-class-name: org.postgresql.Driver
+  datasource:
+   url: jdbc:postgresql://localhost:5055/ccd_data?stringtype=unspecified
+   username: ccd
+   password: ccd
+idam:
+  api:
+    url: http://localhost:8080
+  client:
+    id: ${IDAM_USERNAME:username}
+    secret: ${IDAM_PASSWORD:password}
+    redirect_uri: https://localhost:3000/receiver
