@@ -8,8 +8,9 @@ spring:
    password: ccd
 idam:
   api:
-    url: http://localhost:8080
+    url: ${IDAM_API_URL:http://localhost:5000}
   client:
-    id: ${IDAM_USERNAME:username}
-    secret: ${IDAM_PASSWORD:password}
-    redirect_uri: https://localhost:3000/receiver
+    id: ${IDAM_MIGRATION_ID:test}
+    secret: ${IDAM_MIGRATION_SECRET:test_secret}
+    redirect_uri: ${IDAM_MIGRATION_URI:http://test}
+    scope: openid roles profile manage-user

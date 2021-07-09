@@ -39,6 +39,9 @@ public class DemoApplication implements CommandLineRunner {
 	public void run(String... args) {
 		log.info("Data migration task has begun");
 		long startTime = System.currentTimeMillis();
+		roleCategoryPatterns.add(RoleCategory.CITIZEN.getPattern());
+		roleCategoryPatterns.add(RoleCategory.JUDICIAL.getPattern());
+		roleCategoryPatterns.add(RoleCategory.PROFESSIONAL.getPattern());
 
 		log.info("Starting to update existing role categories");
 
@@ -79,12 +82,13 @@ public class DemoApplication implements CommandLineRunner {
 		for (String userId : dataWithoutRoleCategory) {
 			List<String> idamRoles = retrieveIdamRoles(userId);
 
-			RoleCategory matchingCategory = matchRoleCategory(idamRoles, userId);
-
-			if (matchingCategory != null) {
+			RoleCategory matchingCategory;
+			try {
+				matchingCategory = matchRoleCategory(idamRoles, userId);
 				caseDataRepository.updateRoleCategory(matchingCategory.getName(), userId);
-			} else {
-				throw new MigrationException("No matching role category found for user_id: " + userId);
+			}
+			catch (Exception exception) {
+				log.error(exception.getMessage());
 			}
 		}
 
@@ -96,32 +100,34 @@ public class DemoApplication implements CommandLineRunner {
 	}
 
 	private List<String> retrieveIdamRoles(String userId) {
-		List<String> idamRoles;
+		List<String> idamRoles = null;
 
 		try {
 			idamRoles = idamRepository.getUserRoles(userId).getRoles();
 		} catch (Exception ex) {
-			throw new MigrationException("Error retrieving IdAM roles: " + ex.getMessage());
+			log.error("Error retrieving IdAM roles: " + ex.getMessage());
 		}
 		return idamRoles;
 	}
 
 	private RoleCategory matchRoleCategory(List<String> roles, String userId) {
-		roleCategoryPatterns.add(RoleCategory.CITIZEN.getPattern());
-		roleCategoryPatterns.add(RoleCategory.JUDICIAL.getPattern());
-		roleCategoryPatterns.add(RoleCategory.PROFESSIONAL.getPattern());
 
 		RoleCategory firstCategory = null;
 		for (String role : roles) {
+			RoleCategory newCategory = null;
 			for (Pattern pattern : roleCategoryPatterns) {
 				if (pattern.matcher(role).matches()) {
-					RoleCategory newCategory = RoleCategory.getEnumFromPattern(pattern);
+					newCategory = RoleCategory.getEnumFromPattern(pattern);
 					if (firstCategory == null) {
 						firstCategory = newCategory;
+						break;
 					} else if (firstCategory != newCategory) {
 						throw new MigrationException("Multiple role categories identified for user_id: " + userId);
 					}
 				}
+			}
+			if(newCategory == null) {
+				throw new MigrationException("No matching role category found for role: '" + role + "' of user_id: " + userId);
 			}
 		}
 		return firstCategory;

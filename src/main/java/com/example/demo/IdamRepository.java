@@ -12,15 +12,19 @@ public class IdamRepository {
 
     private final IdamClient idamClient;
     private final ApplicationParams applicationParams;
+    private final String username;
+    private final String password;
 
     @Autowired
     public IdamRepository(IdamClient idamClient, ApplicationParams applicationParams) {
         this.idamClient = idamClient;
         this.applicationParams = applicationParams;
+        username = applicationParams.getIdamUsername();
+        password = applicationParams.getIdamPassword();
     }
 
     public UserDetails getUserRoles(String userId) {
-        String token = idamClient.getAccessToken(applicationParams.getIdamUsername(), applicationParams.getIdamPassword());
-        return idamClient.getUserByUserId("Bearer " + token, userId);
+        String token = idamClient.getAccessToken(username, password);
+        return idamClient.getUserByUserId(token, userId);
     }
 }

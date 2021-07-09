@@ -5,7 +5,7 @@ import java.util.regex.Pattern;
 public enum RoleCategory {
     CITIZEN("CITIZEN", Pattern.compile("^citizen(-.*)?$|^letter-holder$")),
     JUDICIAL("JUDICIAL", Pattern.compile(".+-panelmember$")),
-    PROFESSIONAL("PROFESSIONAL", Pattern.compile("-localAuthority$"));
+    PROFESSIONAL("PROFESSIONAL", Pattern.compile(".solicitor$|^caseworker.-localAuthority$"));
 
     private final String name;
     private final Pattern pattern;
