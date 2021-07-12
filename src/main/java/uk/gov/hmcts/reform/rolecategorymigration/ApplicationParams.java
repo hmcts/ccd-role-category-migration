@@ -8,10 +8,10 @@ import org.springframework.stereotype.Component;
 @Getter
 public class ApplicationParams {
 
-    @Value("${idam.client.id}")
+    @Value("${idam.username}")
     private String idamUsername;
 
-    @Value("${idam.client.secret}")
+    @Value("${idam.password}")
     private String idamPassword;
 
 }

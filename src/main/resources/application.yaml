@@ -14,3 +14,5 @@ idam:
     secret: ${IDAM_MIGRATION_SECRET:test_secret}
     redirect_uri: ${IDAM_MIGRATION_URI:http://test}
     scope: openid roles profile manage-user
+  username: ${IDAM_MIGRATION_USERNAME:master.caseworker@gmail.com}
+  password: ${IDAM_MIGRATION_PASSWORD:Pa55word11}

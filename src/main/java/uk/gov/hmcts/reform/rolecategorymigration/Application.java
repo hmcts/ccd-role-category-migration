@@ -67,8 +67,6 @@ public class Application implements CommandLineRunner {
 			caseDataRepository.updateRoleCategory(entity.getRoleCategory(), entity.getUserId());
 		}
 
-		//commit here?
-
 		if (dataWithRoleCategory.hasNext()) {
 			updateExistingRoleCategory(dataWithRoleCategory.nextPageable());
 		}
@@ -92,8 +90,6 @@ public class Application implements CommandLineRunner {
 			}
 		}
 
-		//commit here?
-		
 		if (dataWithoutRoleCategory.hasNext()) {
 			populateNewRoleCategory(dataWithoutRoleCategory.nextPageable());
 		}
