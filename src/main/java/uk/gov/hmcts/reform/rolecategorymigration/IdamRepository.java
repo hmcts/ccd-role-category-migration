@@ -1,4 +1,4 @@
-package com.example.demo;
+package uk.gov.hmcts.reform.rolecategorymigration;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

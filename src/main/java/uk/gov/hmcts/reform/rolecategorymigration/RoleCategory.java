@@ -1,4 +1,4 @@
-package com.example.demo;
+package uk.gov.hmcts.reform.rolecategorymigration;
 
 import java.util.regex.Pattern;
 

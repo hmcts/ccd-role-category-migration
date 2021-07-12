@@ -1,4 +1,4 @@
-package com.example.demo;
+package uk.gov.hmcts.reform.rolecategorymigration;
 
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;

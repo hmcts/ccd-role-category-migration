@@ -1,4 +1,4 @@
-package com.example.demo;
+package uk.gov.hmcts.reform.rolecategorymigration;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
 @EnableFeignClients(basePackages = {"uk.gov.hmcts.reform.idam"})
 @SpringBootApplication
 @Slf4j
-public class DemoApplication implements CommandLineRunner {
+public class Application implements CommandLineRunner {
 
 	private final List<Pattern> roleCategoryPatterns = new ArrayList<>();
 
@@ -32,7 +32,7 @@ public class DemoApplication implements CommandLineRunner {
 	private IdamRepository idamRepository;
 
 	public static void main(String[] args) {
-		SpringApplication.run(DemoApplication.class, args);
+		SpringApplication.run(Application.class, args);
 	}
 
 	@Override

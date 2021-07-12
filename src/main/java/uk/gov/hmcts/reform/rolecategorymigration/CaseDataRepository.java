@@ -1,4 +1,4 @@
-package com.example.demo;
+package uk.gov.hmcts.reform.rolecategorymigration;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
