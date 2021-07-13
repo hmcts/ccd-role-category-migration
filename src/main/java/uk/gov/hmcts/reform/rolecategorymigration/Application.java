@@ -46,8 +46,6 @@ public class Application implements CommandLineRunner {
 		roleCategoryPatterns.add(RoleCategory.JUDICIAL.getPattern());
 		roleCategoryPatterns.add(RoleCategory.PROFESSIONAL.getPattern());
 
-		// TODO: Make first page & size configurable
-
 		log.info("Starting to populate null role categories");
 
 		populateNewRoleCategory();
