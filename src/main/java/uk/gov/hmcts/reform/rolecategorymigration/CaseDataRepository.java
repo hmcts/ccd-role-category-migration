@@ -1,7 +1,7 @@
 package uk.gov.hmcts.reform.rolecategorymigration;
 
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
@@ -11,10 +11,10 @@ import org.springframework.transaction.annotation.Transactional;
 public interface CaseDataRepository extends PagingAndSortingRepository<CaseUsersEntity, String> {
 
     @Query("select c.userId from CaseUsersEntity c where c.roleCategory IS NULL order by c.userId asc")
-    Slice<String> findCaseUsersById(Pageable pageable);
+    Page<String> findCaseUsersById(Pageable pageable);
 
     @Query("select c from CaseUsersEntity c where c.roleCategory IS NOT NULL order by c.userId asc")
-    Slice<CaseUsersEntity> findCaseUsersWithRoleCategory(Pageable pageable);
+    Page<CaseUsersEntity> findCaseUsersWithRoleCategory(Pageable pageable);
 
     @Query("update CaseUsersEntity c set c.roleCategory = :roleCategory where c.userId = :userId")
     @Modifying
