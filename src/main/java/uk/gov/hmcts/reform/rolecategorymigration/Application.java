@@ -9,11 +9,11 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ForkJoinPool;
 import java.util.regex.Pattern;
 
@@ -23,7 +23,7 @@ import java.util.regex.Pattern;
 public class Application implements CommandLineRunner {
 
 	private final List<Pattern> roleCategoryPatterns = new ArrayList<>();
-	private final int sizeOfPage = 5000;
+	private final String ExceptionLabel = "*EXCEPTION*";
 
 	@Autowired
 	private ApplicationContext context;
@@ -46,14 +46,11 @@ public class Application implements CommandLineRunner {
 		roleCategoryPatterns.add(RoleCategory.JUDICIAL.getPattern());
 		roleCategoryPatterns.add(RoleCategory.PROFESSIONAL.getPattern());
 
-		log.info("Starting to update existing role categories");
-
 		// TODO: Make first page & size configurable
-		updateExistingRoleCategory(PageRequest.of(0, sizeOfPage));
 
 		log.info("Starting to populate null role categories");
 
-		populateNewRoleCategory(PageRequest.of(0, sizeOfPage));
+		populateNewRoleCategory();
 
 		long endTime = System.currentTimeMillis();
 
@@ -62,29 +59,24 @@ public class Application implements CommandLineRunner {
 		SpringApplication.exit(context, () -> 0);
 	}
 
-	private void updateExistingRoleCategory(Pageable pageable) {
-		log.info("Processing page " + pageable.getPageNumber() + " with offset " + pageable.getOffset());
+	private void populateNewRoleCategory() {
 
-		Page<CaseUsersEntity> dataWithRoleCategory = caseDataRepository.findCaseUsersWithRoleCategory(pageable);
-		for (CaseUsersEntity entity : dataWithRoleCategory) {
-			caseDataRepository.updateRoleCategory(entity.getRoleCategory(), entity.getUserId());
+		Page<String> dataWithoutRoleCategory = caseDataRepository.findCaseUsersById(PageRequest.of(0, 5000));
+		if (dataWithoutRoleCategory.isEmpty()) {
+			return;
 		}
-
-		if (dataWithRoleCategory.hasNext()) {
-			updateExistingRoleCategory(dataWithRoleCategory.nextPageable());
-		}
-	}
-
-	private void populateNewRoleCategory(Pageable pageable) {
-		log.info("Processing page " + pageable.getPageNumber() + " with offset " + pageable.getOffset());
-
-		Page<String>  dataWithoutRoleCategory = caseDataRepository.findCaseUsersById(pageable);
-
 		List<String> listOfUserIds = new ArrayList<>(dataWithoutRoleCategory.getContent());
-		HashMap<String, List<String>> rolesToUserIdMap = new HashMap<>();
+		Map<String, List<String>> rolesToUserIdMap = new ConcurrentHashMap<>();
 		ForkJoinPool customThreadPool = new ForkJoinPool(10);
 		try {
-			customThreadPool.submit(() -> listOfUserIds.parallelStream().forEach(userId -> rolesToUserIdMap.put(userId, retrieveIdamRoles(userId)))).get();
+			customThreadPool.submit(() -> listOfUserIds.parallelStream().forEach(userId -> {
+				try {
+					rolesToUserIdMap.put(userId, retrieveIdamRoles(userId));
+				} catch (Exception exception) {
+					caseDataRepository.updateRoleCategory(ExceptionLabel, userId);
+					log.error(exception.getMessage());
+				}
+			})).get();
 		} catch (Exception exception) {
 			log.error(exception.getMessage());
 		} finally {
@@ -101,19 +93,12 @@ public class Application implements CommandLineRunner {
 				log.error(exception.getMessage());
 			}
 		}
-		if (dataWithoutRoleCategory.hasNext()) {
-			populateNewRoleCategory(dataWithoutRoleCategory.nextPageable());
-		}
+		populateNewRoleCategory();
 	}
 
 	private List<String> retrieveIdamRoles(String userId) {
-		List<String> idamRoles = null;
-
-		try {
-			idamRoles = idamRepository.getUserRoles(userId).getRoles();
-		} catch (Exception ex) {
-			log.error("Error retrieving IdAM roles: " + ex.getMessage());
-		}
+		List<String> idamRoles;
+		idamRoles = idamRepository.getUserRoles(userId).getRoles();
 		return idamRoles;
 	}
 
@@ -129,11 +114,13 @@ public class Application implements CommandLineRunner {
 						firstCategory = newCategory;
 						break;
 					} else if (firstCategory != newCategory) {
+						caseDataRepository.updateRoleCategory(ExceptionLabel, userId);
 						throw new MigrationException("Multiple role categories identified for user_id: " + userId);
 					}
 				}
 			}
 			if(newCategory == null) {
+				caseDataRepository.updateRoleCategory(ExceptionLabel, userId);
 				throw new MigrationException("No matching role category found for role: '" + role + "' of user_id: " + userId);
 			}
 		}
