@@ -8,7 +8,7 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.transaction.annotation.Transactional;
 
 @Transactional
-public interface CaseDataRepository extends PagingAndSortingRepository<CaseUsersEntity, String> {
+public interface CaseUsersRepository extends PagingAndSortingRepository<CaseUsersEntity, String> {
 
     @Query("select distinct c.userId from CaseUsersEntity c where c.roleCategory IS NULL order by c.userId asc")
     Page<String> findCaseUsersById(Pageable pageable);

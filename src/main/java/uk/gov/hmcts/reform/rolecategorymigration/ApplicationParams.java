@@ -14,4 +14,13 @@ public class ApplicationParams {
     @Value("${idam.password}")
     private String idamPassword;
 
+    @Value("${migration.page.number}")
+    private int pageNumber;
+
+    @Value("${migration.page.size}")
+    private int pageSize;
+
+    @Value("${idam.concurrent.threads}")
+    private int concurrentThreads;
+
 }

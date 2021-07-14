@@ -5,7 +5,7 @@ import java.util.regex.Pattern;
 public enum RoleCategory {
     CITIZEN("CITIZEN", Pattern.compile("^citizen(-.*)?$|^letter-holder$")),
     JUDICIAL("JUDICIAL", Pattern.compile(".+-panelmember$")),
-    PROFESSIONAL("PROFESSIONAL", Pattern.compile(".solicitor$|^caseworker.-localAuthority$"));
+    PROFESSIONAL("PROFESSIONAL", Pattern.compile(".+-solicitor$|^caseworker-.+-localAuthority$"));
 
     private final String name;
     private final Pattern pattern;
@@ -21,14 +21,5 @@ public enum RoleCategory {
 
     public String getName() {
         return name;
-    }
-
-    public static RoleCategory getEnumFromPattern(Pattern pattern) {
-        for (RoleCategory role : RoleCategory.values()) {
-            if (role.getPattern().equals(pattern)) {
-                return role;
-            }
-        }
-        return null;
     }
 }

@@ -3,16 +3,22 @@ spring:
     database: postgresql
     driver-class-name: org.postgresql.Driver
   datasource:
-   url: jdbc:postgresql://localhost:5055/ccd_data?stringtype=unspecified
-   username: ccd
-   password: ccd
+    url: ${DATA_STORE_DB_URL:jdbc:postgresql://localhost:5055/ccd_data?stringtype=unspecified}
+    username: ${DATA_STORE_DB_USERNAME:ccd}
+    password: ${DATA_STORE_DB_PASSWORD:ccd}
 idam:
   api:
     url: ${IDAM_API_URL:http://localhost:5000}
+  concurrent:
+    threads: ${IDAM_MIGRATION_THREADS:10}
   client:
-    id: ${IDAM_MIGRATION_ID:test}
+    id: ${IDAM_MIGRATION_CLIENT_ID:ccd-role-category-migration}
     secret: ${IDAM_MIGRATION_SECRET:test_secret}
-    redirect_uri: ${IDAM_MIGRATION_URI:http://test}
+    redirect_uri: ${IDAM_MIGRATION_URI:http://ccd-role-category-migration}
     scope: openid roles profile manage-user
   username: ${IDAM_MIGRATION_USERNAME:master.caseworker@gmail.com}
   password: ${IDAM_MIGRATION_PASSWORD:Pa55word11}
+migration:
+  page:
+    number: ${MIGRATION_PAGE_NUMBER:0}
+    size: ${MIGRATION_PAGE_SIZE:5000}

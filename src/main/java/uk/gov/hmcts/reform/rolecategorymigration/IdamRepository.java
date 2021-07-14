@@ -23,8 +23,11 @@ public class IdamRepository {
         password = applicationParams.getIdamPassword();
     }
 
-    public UserDetails getUserRoles(String userId) {
-        String token = idamClient.getAccessToken(username, password);
+    public String getAccessToken() {
+        return idamClient.getAccessToken(username, password);
+    }
+
+    public UserDetails getUserDetails(String token, String userId) {
         return idamClient.getUserByUserId(token, userId);
     }
 }

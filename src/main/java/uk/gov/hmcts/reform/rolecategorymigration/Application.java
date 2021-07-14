@@ -15,21 +15,25 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ForkJoinPool;
-import java.util.regex.Pattern;
 
 @EnableFeignClients(basePackages = {"uk.gov.hmcts.reform.idam"})
 @SpringBootApplication
 @Slf4j
 public class Application implements CommandLineRunner {
 
-	private final List<Pattern> roleCategoryPatterns = new ArrayList<>();
-	private final String ExceptionLabel = "*EXCEPTION*";
+	private static final String EXCEPTION_LABEL = "*EXCEPTION*";
+	private static int PAGE_NUMBER;
+	private static int PAGE_SIZE;
+	private static int CONCURRENT_THREADS;
+
+	@Autowired
+	private ApplicationParams applicationParams;
 
 	@Autowired
 	private ApplicationContext context;
 
 	@Autowired
-	private CaseDataRepository caseDataRepository;
+	private CaseUsersRepository caseUsersRepository;
 
 	@Autowired
 	private IdamRepository idamRepository;
@@ -41,10 +45,12 @@ public class Application implements CommandLineRunner {
 	@Override
 	public void run(String... args) {
 		log.info("Data migration task has begun");
+
+		PAGE_NUMBER = applicationParams.getPageNumber();
+		PAGE_SIZE = applicationParams.getPageSize();
+		CONCURRENT_THREADS = applicationParams.getConcurrentThreads();
+
 		long startTime = System.currentTimeMillis();
-		roleCategoryPatterns.add(RoleCategory.CITIZEN.getPattern());
-		roleCategoryPatterns.add(RoleCategory.JUDICIAL.getPattern());
-		roleCategoryPatterns.add(RoleCategory.PROFESSIONAL.getPattern());
 
 		log.info("Starting to populate null role categories");
 
@@ -59,19 +65,20 @@ public class Application implements CommandLineRunner {
 
 	private void populateNewRoleCategory() {
 
-		Page<String> dataWithoutRoleCategory = caseDataRepository.findCaseUsersById(PageRequest.of(0, 5000));
+		Page<String> dataWithoutRoleCategory = caseUsersRepository.findCaseUsersById(PageRequest.of(PAGE_NUMBER, PAGE_SIZE));
 		if (dataWithoutRoleCategory.isEmpty()) {
 			return;
 		}
-		List<String> listOfUserIds = new ArrayList<>(dataWithoutRoleCategory.getContent());
-		Map<String, List<String>> rolesToUserIdMap = new ConcurrentHashMap<>();
-		ForkJoinPool customThreadPool = new ForkJoinPool(10);
+		String token = idamRepository.getAccessToken();
+		List<String> userIds = new ArrayList<>(dataWithoutRoleCategory.getContent());
+		Map<String, List<String>> userIdToRolesMap = new ConcurrentHashMap<>();
+		ForkJoinPool customThreadPool = new ForkJoinPool(CONCURRENT_THREADS);
 		try {
-			customThreadPool.submit(() -> listOfUserIds.parallelStream().forEach(userId -> {
+			customThreadPool.submit(() -> userIds.parallelStream().forEach(userId -> {
 				try {
-					rolesToUserIdMap.put(userId, retrieveIdamRoles(userId));
+					userIdToRolesMap.put(userId, retrieveIdamRoles(token, userId));
 				} catch (Exception exception) {
-					caseDataRepository.updateRoleCategory(ExceptionLabel, userId);
+					caseUsersRepository.updateRoleCategory(EXCEPTION_LABEL, userId);
 					log.error(exception.getMessage());
 				}
 			})).get();
@@ -81,12 +88,11 @@ public class Application implements CommandLineRunner {
 			customThreadPool.shutdown();
 		}
 
-		RoleCategory matchingCategory;
 
-		for (String userId : rolesToUserIdMap.keySet()) {
+		for (String userId : userIdToRolesMap.keySet()) {
 			try {
-				matchingCategory = matchRoleCategory(rolesToUserIdMap.get(userId), userId);
-				caseDataRepository.updateRoleCategory(matchingCategory.getName(), userId);
+				RoleCategory matchingCategory = matchRoleCategory(userIdToRolesMap.get(userId), userId);
+				caseUsersRepository.updateRoleCategory(matchingCategory.getName(), userId);
 			} catch (Exception exception) {
 				log.error(exception.getMessage());
 			}
@@ -94,34 +100,29 @@ public class Application implements CommandLineRunner {
 		populateNewRoleCategory();
 	}
 
-	private List<String> retrieveIdamRoles(String userId) {
-		List<String> idamRoles;
-		idamRoles = idamRepository.getUserRoles(userId).getRoles();
-		return idamRoles;
+	private List<String> retrieveIdamRoles(String token, String userId) {
+		return idamRepository.getUserDetails(token, userId).getRoles();
 	}
 
 	private RoleCategory matchRoleCategory(List<String> roles, String userId) {
-
-		RoleCategory firstCategory = null;
+		RoleCategory matchedCategory = null;
 		for (String role : roles) {
-			RoleCategory newCategory = null;
-			for (Pattern pattern : roleCategoryPatterns) {
-				if (pattern.matcher(role).matches()) {
-					newCategory = RoleCategory.getEnumFromPattern(pattern);
-					if (firstCategory == null) {
-						firstCategory = newCategory;
+			for (RoleCategory category : RoleCategory.values()) {
+				if (category.getPattern().matcher(role).matches()) {
+					if (matchedCategory == null) {
+						matchedCategory = category;
 						break;
-					} else if (firstCategory != newCategory) {
-						caseDataRepository.updateRoleCategory(ExceptionLabel, userId);
+					} else if (matchedCategory != category) {
+						caseUsersRepository.updateRoleCategory(EXCEPTION_LABEL, userId);
 						throw new MigrationException("Multiple role categories identified for user_id: " + userId);
 					}
 				}
 			}
-			if(newCategory == null) {
-				caseDataRepository.updateRoleCategory(ExceptionLabel, userId);
-				throw new MigrationException("No matching role category found for role: '" + role + "' of user_id: " + userId);
-			}
 		}
-		return firstCategory;
+		if (matchedCategory == null) {
+			caseUsersRepository.updateRoleCategory(EXCEPTION_LABEL, userId);
+			throw new MigrationException("No matching role category found for user_id: " + userId);
+		}
+		return matchedCategory;
 	}
 }
