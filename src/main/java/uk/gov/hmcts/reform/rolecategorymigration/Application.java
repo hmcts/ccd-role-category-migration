@@ -76,6 +76,7 @@ public class Application implements CommandLineRunner {
 		try {
 			customThreadPool.submit(() -> userIds.parallelStream().forEach(userId -> {
 				try {
+					log.info("Getting roles for user id {}", userId);
 					userIdToRolesMap.put(userId, retrieveIdamRoles(token, userId));
 				} catch (Exception exception) {
 					caseUsersRepository.updateRoleCategory(EXCEPTION_LABEL, userId);
