@@ -1,22 +1,24 @@
-# Getting Started
+# CCD Role Category Migration Application
 
-### Reference Documentation
-For further reference, please consider the following sections:
+This application back-populates Role_Category for each record in Data Store's case_users table to either JUDICIAL, PROFESSIONAL, CITIZEN or EXCEPTION in preparation for the migration of case role assignment data from CCD Data Store to the Role Assignment Service.
 
-* [Official Gradle documentation](https://docs.gradle.org)
-* [Spring Boot Gradle Plugin Reference Guide](https://docs.spring.io/spring-boot/docs/2.4.0/gradle-plugin/reference/html/)
-* [Create an OCI image](https://docs.spring.io/spring-boot/docs/2.4.0/gradle-plugin/reference/html/#build-image)
-* [Spring Boot DevTools](https://docs.spring.io/spring-boot/docs/2.4.0/reference/htmlsingle/#using-boot-devtools)
-* [Spring Configuration Processor](https://docs.spring.io/spring-boot/docs/2.4.0/reference/htmlsingle/#configuration-metadata-annotation-processor)
-* [Spring Data JPA](https://docs.spring.io/spring-boot/docs/2.4.0/reference/htmlsingle/#boot-features-jpa-and-spring-data)
+## Environment variables:
+The following environment variables are required:
 
-### Guides
-The following guides illustrate how to use some features concretely:
+| Name | Default | Description |
+|------|---------|-------------|
+| DATA_STORE_DB_URL | jdbc:postgresql://localhost:5055/ccd_data?stringtype=unspecified | Host for database |
+| DATA_STORE_DB_USERNAME | ccd | Username for database |
+| DATA_STORE_DB_PASSWORD | ccd | Password for database |
+| IDAM_API_URL | http://localhost:5000 | Host for IdAM |
+| IDAM_MIGRATION_THREADS | 10 | Number of concurrent calls to IdAM |
+| IDAM_MIGRATION_CLIENT_ID | ccd-role-category-migration | IdAM client ID |
+| IDAM_MIGRATION_SECRET | test_secret | IdAM client secret |
+| IDAM_MIGRATION_URI | http://ccd-role-category-migration | IdAM client re-direct uri |
+| IDAM_MIGRATION_USERNAME | master.caseworker@gmail.com | IdAM user's username |
+| IDAM_MIGRATION_PASSWORD | Pa55word11 | IdAM user's password |
+| MIGRATION_PAGE_NUMBER | 0 | Page number of request |
+| MIGRATION_PAGE_SIZE | 5000 | Number of records per page |
 
-* [Accessing Data with JPA](https://spring.io/guides/gs/accessing-data-jpa/)
 
-### Additional Links
-These additional references should also help you:
-
-* [Gradle Build Scans – insights for your project's build](https://scans.gradle.com#gradle)
 

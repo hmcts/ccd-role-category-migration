@@ -10,7 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public interface CaseUsersRepository extends PagingAndSortingRepository<CaseUsersEntity, String> {
 
-    @Query("select distinct c.userId from CaseUsersEntity c where c.roleCategory IS NULL order by c.userId asc")
+    @Query("select distinct c.userId from CaseUsersEntity c where c.roleCategory IS NULL")
     Page<String> findCaseUsersById(Pageable pageable);
 
     @Query("update CaseUsersEntity c set c.roleCategory = :roleCategory where c.userId = :userId")
