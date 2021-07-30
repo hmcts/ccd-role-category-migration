@@ -1,4 +1,4 @@
-package com.example.demo;
+package uk.gov.hmcts.reform.rolecategorymigration;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,8 +23,11 @@ public class IdamRepository {
         password = applicationParams.getIdamPassword();
     }
 
-    public UserDetails getUserRoles(String userId) {
-        String token = idamClient.getAccessToken(username, password);
+    public String getAccessToken() {
+        return idamClient.getAccessToken(username, password);
+    }
+
+    public UserDetails getUserDetails(String token, String userId) {
         return idamClient.getUserByUserId(token, userId);
     }
 }
