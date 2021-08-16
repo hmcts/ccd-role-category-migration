@@ -121,6 +121,10 @@ public class Application implements CommandLineRunner {
 			}
 		}
 		if (matchedCategory == null) {
+			// Default to citizen if there are no roles
+			if (roles.isEmpty()) {
+				return RoleCategory.CITIZEN;
+			}
 			caseUsersRepository.updateRoleCategory(EXCEPTION_LABEL, userId);
 			throw new MigrationException("No matching role category found for user_id: " + userId);
 		}
