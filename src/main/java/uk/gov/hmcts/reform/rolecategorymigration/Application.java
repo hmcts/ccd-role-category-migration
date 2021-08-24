@@ -115,14 +115,20 @@ public class Application implements CommandLineRunner {
 						break;
 					} else if (matchedCategory != category) {
 						caseUsersRepository.updateRoleCategory(EXCEPTION_LABEL, userId);
-						throw new MigrationException("Multiple role categories identified for user_id: " + userId);
+						throw new MigrationException("Multiple role categories identified for user_id: " + userId +
+							" , roles: " + roles);
 					}
 				}
 			}
 		}
 		if (matchedCategory == null) {
+			// Default to citizen if there are no roles
+			if (roles.isEmpty()) {
+				return RoleCategory.CITIZEN;
+			}
 			caseUsersRepository.updateRoleCategory(EXCEPTION_LABEL, userId);
-			throw new MigrationException("No matching role category found for user_id: " + userId);
+			throw new MigrationException("No matching role category found for user_id: " + userId +
+				" , roles: " + roles);
 		}
 		return matchedCategory;
 	}
